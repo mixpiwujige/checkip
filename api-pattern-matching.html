@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API模糊匹配配置</title>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        .container {
+            padding: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            margin-bottom: 24px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        .alert {
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+        }
+        .alert ul {
+            margin: 8px 0 0 20px;
+            padding: 0;
+        }
+        .form-item {
+            margin-bottom: 24px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+        }
+        .form-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+        }
+        .button-primary {
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button-primary:hover {
+            background-color: #40a9ff;
+        }
+        .current-rule {
+            background-color: #fafafa;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            border: 1px solid #f0f0f0;
+        }
+        .rule-item {
+            margin-bottom: 12px;
+        }
+        .rule-label {
+            font-weight: 500;
+            color: #666;
+        }
+        .rule-value {
+            color: #333;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #1890ff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1 class="title">API模糊匹配配置</h1>
+                <div class="alert">
+                    <strong>配置说明</strong>
+                    <ul>
+                        <li>支持多种匹配模式：前缀匹配、后缀匹配、包含匹配和正则表达式</li>
+                        <li>使用 * 作为通配符，可以匹配任意字符</li>
+                        <li>正则表达式模式支持更复杂的匹配规则</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 当前配置的规则 -->
+            <div class="current-rule">
+                <h3 style="margin-top: 0;">当前配置的规则</h3>
+                <div class="rule-item">
+                    <span class="rule-label">规则名称：</span>
+                    <span class="rule-value" id="currentName">用户API</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-label">匹配类型：</span>
+                    <span class="rule-value" id="currentType">前缀匹配</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-label">匹配模式：</span>
+                    <span class="rule-value" id="currentPattern">/api/v1/users/*</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-label">规则描述：</span>
+                    <span class="rule-value" id="currentDescription">匹配所有用户相关的API请求</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-label">状态：</span>
+                    <label class="switch">
+                        <input type="checkbox" id="currentStatus" checked onchange="updateStatus(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 编辑表单 -->
+            <form id="patternForm" onsubmit="handleSubmit(event)">
+                <div class="form-item">
+                    <label class="form-label">规则名称</label>
+                    <input type="text" class="form-input" id="name" placeholder="请输入规则名称" required>
+                </div>
+
+                <div class="form-item">
+                    <label class="form-label">匹配类型</label>
+                    <select class="form-select" id="type" required>
+                        <option value="">请选择匹配类型</option>
+                        <option value="prefix">前缀匹配 (示例: /api/v1/*)</option>
+                        <option value="suffix">后缀匹配 (示例: *.json)</option>
+                        <option value="contains">包含匹配 (示例: *user*)</option>
+                        <option value="regex">正则表达式 (示例: ^/api/v[0-9]/users/[0-9]+$)</option>
+                    </select>
+                </div>
+
+                <div class="form-item">
+                    <label class="form-label">匹配模式</label>
+                    <input type="text" class="form-input" id="pattern" placeholder="请输入匹配模式" required>
+                </div>
+
+                <div class="form-item">
+                    <label class="form-label">规则描述</label>
+                    <textarea class="form-input" id="description" placeholder="请输入规则描述（选填）" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="button-primary">保存配置</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 初始化表单数据
+        document.getElementById('name').value = '用户API';
+        document.getElementById('type').value = 'prefix';
+        document.getElementById('pattern').value = '/api/v1/users/*';
+        document.getElementById('description').value = '匹配所有用户相关的API请求';
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            // 更新当前配置显示
+            document.getElementById('currentName').textContent = document.getElementById('name').value;
+            document.getElementById('currentType').textContent = document.getElementById('type').options[document.getElementById('type').selectedIndex].text.split(' ')[0];
+            document.getElementById('currentPattern').textContent = document.getElementById('pattern').value;
+            document.getElementById('currentDescription').textContent = document.getElementById('description').value;
+            
+            // 这里可以添加保存到后端的逻辑
+            alert('配置已保存！');
+        }
+
+        function updateStatus(checked) {
+            // 这里可以添加更新状态的逻辑
+            console.log('状态已更新：', checked);
+        }
+    </script>
+</body>
+</html> 
